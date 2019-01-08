@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# project-specific
+/dataset
+/dataset_proc
+/.vscode
