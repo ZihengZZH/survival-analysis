@@ -6,31 +6,32 @@ import datetime
 import matplotlib.pyplot as plt
 from smart_open import smart_open
 from multiprocessing import cpu_count, Pool
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
 
 from src.utility import load_data_clinical
 from src.utility import load_data_RNASeq
 
 
-NO_TREES = 500
-MAX_FEATURES = 0.25
-CRITERION = 'entropy'
-NO_JOBS = cpu_count() * 3
-MODEL_PATH = './models/models_random_forest/'
-MODEL_LIST_PATH = './models/models_random_forest/model_list.txt'
+NO_TREES = 100
+MAX_DEPTH = 3
+MAX_FEATURES = 'log2'
+LEARNING_RATE = 0.1
+LOSS = 'deviance'
+MODEL_PATH = './models/models_gradient_boost/'
+MODEL_LIST_PATH = './models/models_gradient_boost/model_list.txt'
 
 
-def save_model(forest, forest_name):
-    # para forest: RF model to be saved
-    # para forest_name: name of the RF model
-    model_name = forest_name
+def save_model(gbrt, gbrt_name):
+    # para gbrt: GB model to be saved
+    # para gbrt_name: name of the GB model
+    model_name = gbrt_name
     if os.path.isdir(MODEL_PATH + model_name):
         print("\nmodel %s already existed" % model_name)
     else:
         os.mkdir(MODEL_PATH + model_name)
         with smart_open(MODEL_PATH + model_name + '/model.sav', 'wb') as save_path:
-            pickle.dump(forest, save_path)
+            pickle.dump(gbrt, save_path)
         # readme file
         readme_notes = np.array(["This %s model is trained on %s" % (model_name, str(datetime.datetime.now()))])
         np.savetxt(MODEL_PATH + model_name + '/readme.txt', readme_notes, fmt="%s")
@@ -46,24 +47,12 @@ def load_model(model_no):
             if line_no == model_no - 1:
                 model_path = str(line).replace('\n', '')
                 with smart_open(model_path + '/model.sav', 'rb') as f:
-                    forest = pickle.load(f)
+                    gbrt = pickle.load(f)
                 break
-    return forest
+    return gbrt
 
 
-def draw_important_feature(forest, data):
-    # para forest: RF model to draw important features
-    n_features = data.shape[1]
-    feature_names = list(data.columns.values)
-    importances = forest.feature_importances_
-    print("\nFeature ranking:")
-    indices = np.argsort(importances)[::-1]
-    # only output top 50 important features
-    for f in range(50):
-        print("%d. feature %d %s (%f)" % (f+1, indices[f], feature_names[indices[f]], importances[indices[f]]))
-    
-
-def run_random_forest(load=False, model_no=1):
+def run_gradient_boost(load=False, model_no=1):
     # para load: whether or not to load pre-trained model
     # para model_no: if load, which model to load
     data_RNASeq_labels = load_data_RNASeq()
@@ -77,20 +66,18 @@ def run_random_forest(load=False, model_no=1):
     X_train, X_test, y_train, y_test = train_test_split(data_RNASeq, data_labels)
 
     if load:
-        forest = load_model(model_no)
+        gbrt = load_model(model_no)
     else:
-        print("\ntraining a Random Forest classifier ...")
-        forest = RandomForestClassifier(n_estimators=NO_TREES, random_state=0, max_features=MAX_FEATURES, criterion=CRITERION, n_jobs=NO_JOBS)
-        forest_name = "n_estimators=%s,max_features=%s,criterion=%s,n_jobs=%s" % (NO_TREES, MAX_FEATURES, CRITERION, NO_JOBS)
+        print("\ntraining a Gradient Boosting Tree classifier ...")
+        gbrt = GradientBoostingClassifier(n_estimators=NO_TREES, random_state=0, max_features=MAX_FEATURES, max_depth=MAX_DEPTH, learning_rate=LEARNING_RATE)
+        gbrt_name = "n_estimators=%s,max_features=%s,max_depth=%s,learning_rate=%s" % (str(NO_TREES), MAX_FEATURES, str(MAX_DEPTH), str(LEARNING_RATE))
 
-        forest.fit(X_train, y_train)
+        gbrt.fit(X_train, y_train)
 
-        print("\ntraining DONE.\n\nsaving the RF classifier ...")
-        save_model(forest, forest_name)
-
-    print("\ntesting the Random Forest classifier ...\n")
-    print("Accuracy on training set: %.3f" % forest.score(X_train, y_train))
-    print("Accuracy on test set: %.3f" % forest.score(X_test, y_test))
+        print("\ntraining DONE.\n\nsaving the GB classifier ...")
+        save_model(gbrt, gbrt_name)
 
 
-    
+    print("\ntesting the Gradient Boosting Tree classifier ...\n")
+    print("Accuracy on training set: %.3f" % gbrt.score(X_train, y_train))
+    print("Accuracy on test set: %.3f" % gbrt.score(X_test, y_test))

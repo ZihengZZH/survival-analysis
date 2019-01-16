@@ -9,7 +9,7 @@ data_path_process= './dataset_proc/'
 
 
 # load TCGA-BRCA clinical data
-def load_data_clinical(proc=False, test=False):
+def load_data_clinical(proc=True, test=False):
     # para proc: whether or not to load processed clinical data
     # para test: whether or not to print key aspects
     if proc:
@@ -26,7 +26,7 @@ def load_data_clinical(proc=False, test=False):
         age_median, age_min, age_max = statistics.median(age), min(age), max(age)
         # vital status data
         vital = data_clinical['vital_status'].tolist()
-        living, deceased = vital.count('0'), vital.count('1')
+        (living, deceased) = (vital.count(0), vital.count(1)) if proc else (vital.count('0'), vital.count('1'))
         # gender data
         gender = data_clinical['gender'].tolist()
         male, female = gender.count('male'), gender.count('female')
@@ -40,10 +40,13 @@ def load_data_clinical(proc=False, test=False):
 
 
 # load TCGA-BRCA RNASeqGene data
-def load_data_RNASeq(proc=False, test=False):
+def load_data_RNASeq(proc=True, label=True, test=False):
     # para proc: whether or not to load processed RNASeq data
+    # para label: whether or not to load RNASeq data with labels
     # para test: whether or not to print key aspects
-    if proc:
+    if proc and label:
+        data_RNASeq = pd.read_csv(data_path_process+'20160128-BRCA-RNAseqGene-label.txt', sep='\t', index_col=0)
+    elif proc and not label:
         data_RNASeq = pd.read_csv(data_path_process+'20160128-BRCA-RNAseqGene-processed.txt', sep='\t', index_col=0)
     else:
         data_RNASeq = pd.read_csv(data_path+'20160128-BRCA-RNAseqGene.txt', sep='\t', header=0, index_col=0).T
@@ -80,6 +83,7 @@ def save_processed_data(data, data_type=None):
         print("\nProcessed RNASeq with labels data has been successfully written to file ...")
 
 
+'''ONLY EXECUTE ONCE'''
 # label the RNASeq data with the clinical data
 def label_RNASeq_data():
     print("\nLabel the RNASeq data with the vital_status in clinical data ...")
@@ -115,4 +119,14 @@ def label_RNASeq_data():
     save_processed_data(data_RNASeq_copy, data_type='RNASeq_label')
     
 
-label_RNASeq_data()
+'''
+description of clinical data and RNASeqGene data (after pre-processing):
+
+CLINICAL DATA
+#features       #samples    #living     #deceased
+18              779         658         121  
+
+RNASEQGENGE DATA
+#features       #samples
+20533           878 
+'''
