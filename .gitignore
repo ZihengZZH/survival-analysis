@@ -108,3 +108,4 @@ venv.bak/
 /dataset_proc
 /.vscode
 /models
+/images

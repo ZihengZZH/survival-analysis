@@ -40,12 +40,14 @@ def load_data_clinical(proc=True, test=False):
 
 
 # load TCGA-BRCA RNASeqGene data
-def load_data_RNASeq(proc=True, label=True, test=False):
+def load_data_RNASeq(proc=True, label=True, lymph=False, test=False):
     # para proc: whether or not to load processed RNASeq data
     # para label: whether or not to load RNASeq data with labels
     # para test: whether or not to print key aspects
     if proc and label:
         data_RNASeq = pd.read_csv(data_path_process+'20160128-BRCA-RNAseqGene-label.txt', sep='\t', index_col=0)
+    elif proc and lymph:
+        data_RNASeq = pd.read_csv(data_path_process+'20160128-BRCA-RNAseqGene-lymph.txt', sep='\t', index_col=0)
     elif proc and not label:
         data_RNASeq = pd.read_csv(data_path_process+'20160128-BRCA-RNAseqGene-processed.txt', sep='\t', index_col=0)
     else:
@@ -81,12 +83,19 @@ def save_processed_data(data, data_type=None):
     if data_type == 'RNASeq_label':
         data.to_csv(data_path_process+'20160128-BRCA-RNAseqGene-label.txt', sep='\t')
         print("\nProcessed RNASeq with labels data has been successfully written to file ...")
+    if data_type == 'RNASeq_lymph':
+        data.to_csv(data_path_process+'20160128-BRCA-RNAseqGene-lymph.txt', sep='\t')
+        print("\nProcessed RNASeq with #lymph nodes data has been successfully written to file ...")
 
 
 '''ONLY EXECUTE ONCE'''
 # label the RNASeq data with the clinical data
-def label_RNASeq_data():
-    print("\nLabel the RNASeq data with the vital_status in clinical data ...")
+def label_RNASeq_data(lymph=False):
+    # para lymph: whether to label RNASeq with lymph data
+    if not lymph:
+        print("\nLabel the RNASeq data with the vital_status in clinical data ...")
+    else:
+        print("\nLabel the RNASeq data with the #lymph nodes in clinical data ...")
     # load data first
     data_clinical = load_data_clinical()
     data_RNASeq = load_data_RNASeq(proc=True)
@@ -111,13 +120,21 @@ def label_RNASeq_data():
             data_RNASeq_copy = data_RNASeq_copy.drop([index_RNASeq])
         # otherwise, label the samples 
         else:
-            label = data_clinical_copy.loc[index_RNASeq[:12].lower(),:]['vital_status']
+            if not lymph:
+                label = data_clinical_copy.loc[index_RNASeq[:12].lower(),:]['vital_status']
+            else:
+                label = data_clinical_copy.loc[index_RNASeq[:12].lower(),:]['number_of_lymph_nodes']
+                label = 0 if pd.isnull(label) else label
+                label = 1 if label > 0 else label
             data_RNASeq_copy.loc[index_RNASeq, 'label'] = label
     
     # save the processed data for further analysis
     save_processed_data(data_clinical_copy, data_type='clinical')
-    save_processed_data(data_RNASeq_copy, data_type='RNASeq_label')
-    
+    if not lymph:
+        save_processed_data(data_RNASeq_copy, data_type='RNASeq_label')
+    else:
+        save_processed_data(data_RNASeq_copy, data_type='RNASeq_lymph')
+
 
 '''
 description of clinical data and RNASeqGene data (after pre-processing):

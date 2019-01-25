@@ -1,0 +1,1 @@
+{'learning_rate': 0.1, 'max_depth': 8, 'max_features': 'sqrt', 'n_estimators': 200}0.8525835866261399

@@ -46,7 +46,7 @@ The TCGA-BRCA clinical data include the followings of 1097 patients:
 
 ### RNA Sequencing
 ---
-RNA-Seq, also called whole transcriptome shotgun sequencing, uses next-generation sequencing to reveal the presence the quentity of RNA in a biological sample at a given moment. Each sample contrains raw_counts, median_length_normalized, and RPKM for every gene.
+RNA-Seq, also called whole transcriptome shotgun sequencing, uses next-generation sequencing to reveal the presence the quantity of RNA in a biological sample at a given moment. Each sample contrains raw_counts, median_length_normalized, and RPKM for every gene.
 
 #### RPKM (Reads Per Kilobase Million):
 
@@ -95,3 +95,12 @@ Authors concluded that both selecting the right ML algorithm and tuning its para
    * C = 1.5
    * penalty = 'l1'
    * fit_intercept = True
+
+## Survival Analysis 
+
+Traditionally, survival analysis was developed to measure lifespans of individuals. The analysis can be further applied to not just traditional _births and deaths_, but any duration. Medical professionals might be interested in the time between childbirths, where a birth in this case is the event of having a child, and a death is becoming pregnant again (obviously, we are loose with our definitions of _birth and death_). 
+
+At the time you want to make inferences about durations, it is possible that not all the death events have occured yet. The individuals in a population who have not been subject to the death event are labeled as __right-censored__, i.e., we can not view the rest of their life history due to some external circumstances. All the information we have on these individuals are their current lifetime durations, which is naturally less than their actual lifetimes. There is also __left-censorship__, where an individual's birth event is not seen.
+
+A common mistake data analysts make a choosing to ignore the right-censored individuals. Survival analysis was originally developed to solve this type of problem, to deal with estimation when our data is right-censored. Even in the case where all events have been observed, i.e. no censorship, survival analysis is still a very useful tool to understand durations.
+
