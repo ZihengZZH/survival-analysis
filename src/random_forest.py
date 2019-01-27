@@ -24,7 +24,7 @@ NO_JOBS = cpu_count() * 3
 MODEL_PATH = './models/models_random_forest/'
 MODEL_LIST_PATH = './models/models_random_forest/model_list.txt'
 FEATURE_IMP_PATH = './results/feature_importance_rf.txt'
-ROC_CURVE_PATH = './results/roc_curve_random_forest.png'
+PRECISION_RECALL_CURVE_PATH = './results/curve_random_forest.png'
 
 
 def save_model(forest, forest_name):
@@ -46,7 +46,7 @@ def save_model(forest, forest_name):
 
 
 def load_model(model_no):
-    # para model_no:
+    # para model_no: which RF model to load
     with smart_open(MODEL_LIST_PATH, 'rb', encoding='utf-8') as model_list:
         for line_no, line in enumerate(model_list):
             if line_no == model_no - 1:
@@ -65,12 +65,12 @@ def save_importances(save2file):
             f.write("\n")
 
 
+'''ONLY SHOW TOP 50 FEATURES'''
 def show_important_feature(forest, data, save=True, img=False):
     # para forest: RF model to draw important features
     # para data: RNA_Seq data w/ index
     # para save: whether or not to save importances to file
     # para img: whether or not to show the image
-    n_features = data.shape[1]
     feature_names = list(data.columns.values)
     importances = forest.feature_importances_
     print("\nFeature ranking:")
@@ -110,6 +110,7 @@ def run_random_forest(load=False, model_no=1):
     X_train, X_test, y_train, y_test = train_test_split(data_RNASeq, data_labels)
 
     if load:
+        print("\nload pre-trained no.%d model" % model_no)
         forest = load_model(model_no)
     else:
         print("\ntraining a Random Forest classifier ...")
@@ -126,7 +127,9 @@ def run_random_forest(load=False, model_no=1):
     print("Accuracy on training set: %.3f" % forest.score(X_train, y_train))
     print("Accuracy on test set: %.3f" % forest.score(X_test, y_test))
 
+    # show & save the top 50 important features
     show_important_feature(forest, data_RNASeq, img=False)
+    # draw the precision recall curve for the classifier
     draw_precision_recall_curve(y_test, y_pred)
 
 
@@ -142,7 +145,7 @@ def draw_precision_recall_curve(y_test, y_score):
     plt.ylim([0.0, 1.05])
     plt.xlim([0.0, 1.0])
     plt.title('2-class Precision-Recall curve: AP={0:0.2f}'.format(average_precision))
-    fig.savefig(ROC_CURVE_PATH, dpi=300)
+    fig.savefig(PRECISION_RECALL_CURVE_PATH, dpi=300)
 
 
 '''ONLY EXECUTE ONCE'''
@@ -171,7 +174,7 @@ def tune_hyperparameters():
     print(clf.score(X_train, y_train))
     print(clf.best_params_)
 
-    # np.savetxt("./results/all_params_random_forest.txt", clf.cv_results_)
+    # save tuned hyperparameters
     with smart_open("./results/best_params_random_forest.txt", 'w', encoding='utf-8') as f:
         f.write(str(clf.best_params_) + str(clf.best_score_))
     print("\nbest hyperparameters for RF has been written to file.")

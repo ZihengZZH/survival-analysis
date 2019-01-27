@@ -1,44 +1,44 @@
 import os
 import numpy as np
 import pandas as pd
+import xgboost as xgb
 import pickle
 import datetime
 import matplotlib.pyplot as plt
 from smart_open import smart_open
 from multiprocessing import cpu_count, Pool
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import average_precision_score
-from sklearn.metrics import precision_recall_curve
+from xgboost import plot_importance
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import confusion_matrix, mean_squared_error
+from sklearn.metrics import average_precision_score, precision_recall_curve
 from sklearn.utils.fixes import signature
-from sklearn.model_selection import GridSearchCV
 
 from src.utility import load_data_clinical
 from src.utility import load_data_RNASeq
 
 
 NO_TREES = 200
-MAX_DEPTH = 8
-MAX_FEATURES = 'sqrt'
-LEARNING_RATE = 0.1
-LOSS = 'deviance'
+MAX_DEPTH = 3
+MIN_CHILD_WEIGHT = 5
+G = 0.5
+SUBSAMPLE = 0.6
 NO_JOBS = cpu_count() * 3
-MODEL_PATH = './models/models_gradient_boost/'
-MODEL_LIST_PATH = './models/models_gradient_boost/model_list.txt'
-FEATURE_IMP_PATH = './results/feature_importance_gbrt.txt'
-PRECISION_RECALL_CURVE_PATH = './results/curve_gradient_boost.png'
+MODEL_PATH = './models/models_xgboost/'
+MODEL_LIST_PATH = './models/models_xgboost/model_list.txt'
+FEATURE_IMP_PATH = './results/feature_importance_xgbt.txt'
+PRECISION_RECALL_CURVE_PATH = './results/curve_xgboost.png'
 
 
-def save_model(gbrt, gbrt_name):
-    # para gbrt: GB model to be saved
-    # para gbrt_name: name of the GB model
-    model_name = gbrt_name
+def save_model(xgbt, xgbt_name):
+    # para xgbt: XGBoost model to be saved
+    # para xgbt_name: name of the XGBoost model
+    model_name = xgbt_name
     if os.path.isdir(MODEL_PATH + model_name):
         print("\nmodel %s already existed" % model_name)
     else:
         os.mkdir(MODEL_PATH + model_name)
         with smart_open(MODEL_PATH + model_name + '/model.sav', 'wb') as save_path:
-            pickle.dump(gbrt, save_path)
+            pickle.dump(xgbt, save_path)
         # readme file
         readme_notes = np.array(["This %s model is trained on %s" % (model_name, str(datetime.datetime.now()))])
         np.savetxt(MODEL_PATH + model_name + '/readme.txt', readme_notes, fmt="%s")
@@ -48,15 +48,15 @@ def save_model(gbrt, gbrt_name):
 
 
 def load_model(model_no):
-    # para model_no: which GBRT model to load
+    # para model_no: which XGBoost model to load
     with smart_open(MODEL_LIST_PATH, 'rb', encoding='utf-8') as model_list:
         for line_no, line in enumerate(model_list):
             if line_no == model_no - 1:
                 model_path = str(line).replace('\n', '')
                 with smart_open(model_path + '/model.sav', 'rb') as f:
-                    gbrt = pickle.load(f)
+                    xgbt = pickle.load(f)
                 break
-    return gbrt
+    return xgbt
 
 
 def save_importances(save2file):
@@ -68,13 +68,13 @@ def save_importances(save2file):
 
 
 '''ONLY SHOW TOP 50 FEATURES'''
-def show_important_feature(gbrt, data, save=True, img=False):
-    # para gbrt: GBRT model to draw important features
+def show_important_feature(xgbt, data, save=True, img=False):
+    # para xgbt: XGBoost model to draw important features
     # para data: RNA_Seq data w/ index
     # para save: whether or not to save importances to file
     # para img: whether or not to show the image
     feature_names = list(data.columns.values)
-    importances = gbrt.feature_importances_
+    importances = xgbt.feature_importances_
     print("\nFeature ranking:")
     indices = np.argsort(importances)[::-1]
     save2file = []
@@ -97,7 +97,7 @@ def show_important_feature(gbrt, data, save=True, img=False):
         plt.show()
 
 
-def run_gradient_boost(load=False, model_no=1):
+def run_xgboost_classifier(load=False, model_no=1):
     # para load: whether or not to load pre-trained model
     # para model_no: if load, which model to load
     data_RNASeq_labels = load_data_RNASeq()
@@ -112,24 +112,24 @@ def run_gradient_boost(load=False, model_no=1):
 
     if load:
         print("\nload pre-trained no.%d model" % model_no)
-        gbrt = load_model(model_no)
+        xgb_model = load_model(model_no)
     else:
-        print("\ntraining a Gradient Boosting Tree classifier ...")
-        gbrt = GradientBoostingClassifier(n_estimators=NO_TREES, random_state=0, max_features=MAX_FEATURES, max_depth=MAX_DEPTH, learning_rate=LEARNING_RATE)
-        gbrt_name = "n_estimators=%s,max_features=%s,max_depth=%s,learning_rate=%s" % (str(NO_TREES), MAX_FEATURES, str(MAX_DEPTH), str(LEARNING_RATE))
+        print("\ntraining a XGBoost classifier ...")
+        xgb_model = xgb.XGBClassifier(min_child_weight=MIN_CHILD_WEIGHT, gamma=G, subsample=SUBSAMPLE, n_estimators=NO_TREES, max_depth=MAX_DEPTH)
+        xgbt_name = "min_child_weight=%s,gamma=%s,subample=%s,n_estimators=%s,max_depth=%s" % (str(MIN_CHILD_WEIGHT), str(G), str(SUBSAMPLE), str(NO_TREES), str(MAX_DEPTH))
 
-        gbrt.fit(X_train, y_train)
+        xgb_model.fit(X_train, y_train)
 
-        print("\ntraining DONE.\n\nsaving the GB classifier ...")
-        save_model(gbrt, gbrt_name)
-
-    print("\ntesting the Gradient Boosting Tree classifier ...\n")
-    y_pred = gbrt.predict(X_test)
-    print("Accuracy on training set: %.3f" % gbrt.score(X_train, y_train))
-    print("Accuracy on test set: %.3f" % gbrt.score(X_test, y_test))
+        print("\ntraining DONE. \n\nsaving the XGBoost classifer ...")
+        save_model(xgb_model, xgbt_name)
+        
+    print("\ntesting the XGBoost classifier ...")
+    y_pred = xgb_model.predict(X_test)
+    print(mean_squared_error(y_test, y_pred))
+    print(confusion_matrix(y_test, y_pred))
 
     # show & save the top 50 important features
-    show_important_feature(gbrt, data_RNASeq, img=False)
+    show_important_feature(xgb_model, data_RNASeq, img=False)
     # draw the precision recall curve for the classifier
     draw_precision_recall_curve(y_test, y_pred)
 
@@ -151,7 +151,7 @@ def draw_precision_recall_curve(y_test, y_score):
 
 '''ONLY EXECUTE ONCE'''
 def tune_hyperparameters():
-    # load the data
+    # loda the data
     data_RNASeq_labels = load_data_RNASeq()
     data_RNASeq_labels = data_RNASeq_labels.drop(columns=['gene'])
 
@@ -162,21 +162,23 @@ def tune_hyperparameters():
     print("\nsplitting the training/test dataset ...")
     X_train, X_test, y_train, y_test = train_test_split(data_RNASeq, data_labels)
 
-    parameters = {
-        "n_estimators": [200, 400, 500, 600, 800],
-        "max_features": ['log2', 'sqrt'],
-        "max_depth": [3, 5, 8],
-        "learning_rate": [0.05, 0.1, 0.2]
+    params = {
+        "min_child_weight": [1, 5 ,10],
+        "gamma": [0.5, 1, 2],
+        "subsample": [0.6, 0.8, 1.0],
+        "max_depth": [3, 5],
+        "n_estimators": [50, 200]
     }
 
-    print("\nrunning the Grid Search for Gradient Boosting Tree classifier ...")
-    clf = GridSearchCV(GradientBoostingClassifier(), parameters, cv=3, n_jobs=NO_JOBS, verbose=10)
+    print("\nrunning the Grid Search for XGBoost classifier ...")
+    clf = GridSearchCV(xgb.XGBClassifier(), params, cv=3, n_jobs=NO_JOBS, verbose=10)
 
     clf.fit(X_train, y_train)
-    print(clf.score(X_train, y_train))
-    print(clf.best_params_)
-    
-    # save tune hyperparameters
-    with smart_open("./results/best_params_gradient_boost.txt", 'w', encoding='utf-8') as f:
+    print(clf.best_score_)
+    print(clf.best_estimator_)
+
+    # save tuned hyperparameters
+    with smart_open("./results/best_params_xgboost.txt", 'w', encoding='utf-8') as f:
         f.write(str(clf.best_params_) + str(clf.best_score_))
-    print("\nbest hyperparameters for GBRT has been written to file.")
+    print("\nbest hyperparameters for XGBOOST has been written to file.")
+

@@ -12,14 +12,16 @@ from src.utility import load_data_RNASeq
 
 IMPORTANT_FEATURE_RANDOM_FOREST = './results/feature_importance_rf.txt'
 IMPORTANT_FEATURE_GRADIENT_BOOST = './results/feature_importance_gbrt.txt'
+IMPORTANT_FEATURE_XGBOOST = './results/feature_importance_xgbt.txt'
 PLOTS_PATH_RF = './images/random_forest/'
 PLOTS_PATH_GBRT = './images/gradient_boost/'
+PLOTS_PATH_XBGT = './images/xgboost/'
 LOG_P_VALUES_PATH = './results/'
 
 
 def survival_analysis_with_one_RNASeq(model_type, data, feature_list, feature_no):
-    # para model_type:
-    # para feature_no:
+    # para model_type: the type of classifier model (RF/GBRT/XGBoost)
+    # para feature_no: the index of the feature [0, 50]
     feature_name = feature_list[feature_no][1]
     T = data[feature_name]
     E = data['label']
@@ -55,13 +57,15 @@ def survival_analysis_with_one_RNASeq(model_type, data, feature_list, feature_no
     print("\nmedian survival time of lower group", kmf_lower.median_)
 
     plt.ylim(0, 1)
-    plt.title("life span")
+    plt.title("life span with or without %s gene signature" % feature_name)
 
     img_name = "gene_sig_%d.png" % (feature_no+1)
     if model_type == 'rf':
         ax.get_figure().savefig(PLOTS_PATH_RF + img_name)
     elif model_type == 'gbrt':
         ax.get_figure().savefig(PLOTS_PATH_GBRT + img_name)
+    elif model_type == 'xgbt':
+        ax.get_figure().savefig(PLOTS_PATH_XBGT + img_name)
     ax.clear() # for the next use
 
     results = logrank_test(higher_group[:,0], lower_group[:,0], higher_group[:,1], lower_group[:,1], alpha=.99)
@@ -84,6 +88,10 @@ def survival_analysis_with_all_RNASeq(model_type):
         for line in smart_open(IMPORTANT_FEATURE_GRADIENT_BOOST, 'r', encoding='utf-8'):
             line = line.split()
             feature_list.append((line[2], line[3]))
+    elif model_type == 'xgbt':
+        for line in smart_open(IMPORTANT_FEATURE_XGBOOST, 'r', encoding='utf-8'):
+            line = line.split()
+            feature_list.append((line[2], line[3]))
     else:
         print("\nPlease indicate the type of model you have trained to produce important features")
 
@@ -96,8 +104,8 @@ def survival_analysis_with_all_RNASeq(model_type):
     
 
 def save_log_p_values(model_type, log_p_values):
-    # para model_type:
-    # para log_p_values:
+    # para model_type: the type of classifier model (RF/GBRT/XGBoost)
+    # para log_p_values: p-values (-log10) on the top 50 gene signatures selected by this classifier
     filename = LOG_P_VALUES_PATH + 'log_p_values_%s.txt' % model_type
     np.savetxt(filename, log_p_values)
     print("\nlog p-values has been saved to file.")
@@ -106,8 +114,10 @@ def save_log_p_values(model_type, log_p_values):
 def draw_log_p_values():
     rf_p_values = np.loadtxt(LOG_P_VALUES_PATH + 'log_p_values_rf.txt')
     gbrt_p_values = np.loadtxt(LOG_P_VALUES_PATH + 'log_p_values_gbrt.txt')
+    xgbt_p_values = np.loadtxt(LOG_P_VALUES_PATH + 'log_p_values_xgbt.txt')
     range_p_values = list(range(1,51))
     plt.plot(range_p_values, rf_p_values, 'r', label='random forest')
     plt.plot(range_p_values, gbrt_p_values, 'b', label='gradient boost')
+    plt.plot(range_p_values, xgbt_p_values, 'g', label='xgboost')
     plt.legend()
     plt.show()
