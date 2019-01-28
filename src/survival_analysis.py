@@ -112,12 +112,30 @@ def save_log_p_values(model_type, log_p_values):
 
 
 def draw_log_p_values():
+    # load the data
     rf_p_values = np.loadtxt(LOG_P_VALUES_PATH + 'log_p_values_rf.txt')
     gbrt_p_values = np.loadtxt(LOG_P_VALUES_PATH + 'log_p_values_gbrt.txt')
     xgbt_p_values = np.loadtxt(LOG_P_VALUES_PATH + 'log_p_values_xgbt.txt')
+
+    rf_count, gbrt_count, xgbt_count = 0, 0, 0
+    for i in range(50):
+        if rf_p_values[i] < 2.:
+            rf_count += 1
+        if gbrt_p_values[i] < 2.:
+            gbrt_count += 1
+        if xgbt_p_values[i] < 2.:
+            xgbt_count += 1
+    print("\np-values less than 0.01 (count)")
+    print("RF: %d\nGBRT: %d\nXGBT: %d" % (rf_count, gbrt_count, xgbt_count))
+
+    # draw the graph
     range_p_values = list(range(1,51))
+    ylim = [2.] * 51
     plt.plot(range_p_values, rf_p_values, 'r', label='random forest')
     plt.plot(range_p_values, gbrt_p_values, 'b', label='gradient boost')
     plt.plot(range_p_values, xgbt_p_values, 'g', label='xgboost')
+    plt.plot(ylim, 'm--')
+    plt.xlabel('number of genes')
+    plt.ylabel('-log10(p-values)')
     plt.legend()
     plt.show()

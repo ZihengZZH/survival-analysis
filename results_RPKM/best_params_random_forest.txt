@@ -1,0 +1,1 @@
+{'criterion': 'entropy', 'max_features': 0.1, 'n_estimators': 500}0.8449848024316109

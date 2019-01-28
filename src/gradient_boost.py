@@ -20,7 +20,7 @@ from src.utility import load_data_RNASeq
 NO_TREES = 200
 MAX_DEPTH = 8
 MAX_FEATURES = 'sqrt'
-LEARNING_RATE = 0.1
+LEARNING_RATE = 0.2
 LOSS = 'deviance'
 NO_JOBS = cpu_count() * 3
 MODEL_PATH = './models/models_gradient_boost/'
@@ -100,7 +100,8 @@ def show_important_feature(gbrt, data, save=True, img=False):
 def run_gradient_boost(load=False, model_no=1):
     # para load: whether or not to load pre-trained model
     # para model_no: if load, which model to load
-    data_RNASeq_labels = load_data_RNASeq()
+    data_RNASeq_labels = load_data_RNASeq(proc=False, label=False, raw_count=True)
+    print(data_RNASeq_labels.iloc[1:3])
     data_RNASeq_labels = data_RNASeq_labels.drop(columns=['gene'])
 
     data_labels = data_RNASeq_labels['label']
@@ -152,7 +153,8 @@ def draw_precision_recall_curve(y_test, y_score):
 '''ONLY EXECUTE ONCE'''
 def tune_hyperparameters():
     # load the data
-    data_RNASeq_labels = load_data_RNASeq()
+    data_RNASeq_labels = load_data_RNASeq(proc=False, label=False, raw_count=True)
+    print(data_RNASeq_labels.iloc[1:3])
     data_RNASeq_labels = data_RNASeq_labels.drop(columns=['gene'])
 
     data_labels = data_RNASeq_labels['label']
@@ -170,7 +172,7 @@ def tune_hyperparameters():
     }
 
     print("\nrunning the Grid Search for Gradient Boosting Tree classifier ...")
-    clf = GridSearchCV(GradientBoostingClassifier(), parameters, cv=3, n_jobs=NO_JOBS, verbose=10)
+    clf = GridSearchCV(GradientBoostingClassifier(), parameters, cv=2, n_jobs=NO_JOBS, verbose=10)
 
     clf.fit(X_train, y_train)
     print(clf.score(X_train, y_train))

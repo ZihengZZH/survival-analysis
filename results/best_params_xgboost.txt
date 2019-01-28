@@ -1,1 +1,1 @@
-{'gamma': 0.5, 'max_depth': 3, 'min_child_weight': 5, 'n_estimators': 200, 'subsample': 0.6}0.8449848024316109
+{'gamma': 1, 'max_depth': 3, 'min_child_weight': 1, 'n_estimators': 50, 'subsample': 0.8}0.8419452887537994

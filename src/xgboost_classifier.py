@@ -17,11 +17,11 @@ from src.utility import load_data_clinical
 from src.utility import load_data_RNASeq
 
 
-NO_TREES = 200
+NO_TREES = 50
 MAX_DEPTH = 3
-MIN_CHILD_WEIGHT = 5
-G = 0.5
-SUBSAMPLE = 0.6
+MIN_CHILD_WEIGHT = 1
+G = 1
+SUBSAMPLE = 0.8
 NO_JOBS = cpu_count() * 3
 MODEL_PATH = './models/models_xgboost/'
 MODEL_LIST_PATH = './models/models_xgboost/model_list.txt'
@@ -100,7 +100,8 @@ def show_important_feature(xgbt, data, save=True, img=False):
 def run_xgboost_classifier(load=False, model_no=1):
     # para load: whether or not to load pre-trained model
     # para model_no: if load, which model to load
-    data_RNASeq_labels = load_data_RNASeq()
+    data_RNASeq_labels = load_data_RNASeq(proc=False, label=False, raw_count=True)
+    print(data_RNASeq_labels.iloc[1:3])
     data_RNASeq_labels = data_RNASeq_labels.drop(columns=['gene'])
 
     data_labels = data_RNASeq_labels['label']
@@ -152,7 +153,8 @@ def draw_precision_recall_curve(y_test, y_score):
 '''ONLY EXECUTE ONCE'''
 def tune_hyperparameters():
     # loda the data
-    data_RNASeq_labels = load_data_RNASeq()
+    data_RNASeq_labels = load_data_RNASeq(proc=False, label=False, raw_count=True)
+    print(data_RNASeq_labels.iloc[1:3])
     data_RNASeq_labels = data_RNASeq_labels.drop(columns=['gene'])
 
     data_labels = data_RNASeq_labels['label']
@@ -171,7 +173,7 @@ def tune_hyperparameters():
     }
 
     print("\nrunning the Grid Search for XGBoost classifier ...")
-    clf = GridSearchCV(xgb.XGBClassifier(), params, cv=3, n_jobs=NO_JOBS, verbose=10)
+    clf = GridSearchCV(xgb.XGBClassifier(), params, cv=2, n_jobs=NO_JOBS, verbose=10)
 
     clf.fit(X_train, y_train)
     print(clf.best_score_)

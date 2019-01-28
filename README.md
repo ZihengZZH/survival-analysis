@@ -104,3 +104,9 @@ At the time you want to make inferences about durations, it is possible that not
 
 A common mistake data analysts make a choosing to ignore the right-censored individuals. Survival analysis was originally developed to solve this type of problem, to deal with estimation when our data is right-censored. Even in the case where all events have been observed, i.e. no censorship, survival analysis is still a very useful tool to understand durations.
 
+## Performance comparison
+
+| the number of p-values < 0.01 | Random Forests | Gradient Tree Boosting | XGBoost |
+| -- | -- | -- | -- |
+| raw counts | 6 | 8 | 7 |
+| RPKM | 2 | 12 | 9 |

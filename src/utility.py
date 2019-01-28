@@ -40,7 +40,7 @@ def load_data_clinical(proc=True, test=False):
 
 
 # load TCGA-BRCA RNASeqGene data
-def load_data_RNASeq(proc=True, label=True, lymph=False, test=False):
+def load_data_RNASeq(proc=True, label=True, lymph=False, test=False, raw_count=False):
     # para proc: whether or not to load processed RNASeq data
     # para label: whether or not to load RNASeq data with labels
     # para test: whether or not to print key aspects
@@ -50,14 +50,16 @@ def load_data_RNASeq(proc=True, label=True, lymph=False, test=False):
         data_RNASeq = pd.read_csv(data_path_process+'20160128-BRCA-RNAseqGene-lymph.txt', sep='\t', index_col=0)
     elif proc and not label:
         data_RNASeq = pd.read_csv(data_path_process+'20160128-BRCA-RNAseqGene-processed.txt', sep='\t', index_col=0)
+    elif raw_count:
+        data_RNASeq = pd.read_csv(data_path_process+'20160128-BRCA-RNAseqGene-raw-counts-label.txt', sep='\t', index_col=0)
     else:
         data_RNASeq = pd.read_csv(data_path+'20160128-BRCA-RNAseqGene.txt', sep='\t', header=0, index_col=0).T
         # RPKM index list
-        RPKM_index_lst = [x*3+2 for x in list(range(878))]
+        RPKM_index_lst = [x*3+2 for x in list(range(878))] if not raw_count else [x*3 for x in list(range(878))]
         # RPKM partition of the RNASeq
         data_RNASeq_RPKM = data_RNASeq.iloc[RPKM_index_lst]
         # save processed data 
-        save_processed_data(data_RNASeq_RPKM, data_type='RNASeq')
+        save_processed_data(data_RNASeq_RPKM, raw_count, data_type='RNASeq')
     
     if test:
         # features (RNA gene)
@@ -69,11 +71,18 @@ def load_data_RNASeq(proc=True, label=True, lymph=False, test=False):
 
 
 # save processed data to file (suitable for various data types)
-def save_processed_data(data, data_type=None):
+def save_processed_data(data, raw_count, data_type=None):
     # para data: the processed data to store
+    # para raw_count: whether to load RPKM or raw counts 
     if not data_type:
         print("\nNo data types identified")
         return
+    if raw_count and data_type == 'raw_counts':
+        data.to_csv(data_path_process+'20160128-BRCA-RNAseqGene-raw-counts-label.txt', sep='\t')
+        print("\nProcessed RNASeq data (w/ raw counts & labels) has been successfully written to file ...")
+    if raw_count:
+        data.to_csv(data_path_process+'20160128-BRCA-RNAseqGene-raw-counts.txt', sep='\t')
+        print("\nProcessed RNASeq data (w/ raw counts) has been successfully written to file ...")
     if data_type == 'clinical':
         data.to_csv(data_path_process+'20160128-BRCA-Clinical-processed.txt', sep='\t')
         print("\nProcessed Clinical data has been successfully written to file ...")
@@ -98,7 +107,7 @@ def label_RNASeq_data(lymph=False):
         print("\nLabel the RNASeq data with the #lymph nodes in clinical data ...")
     # load data first
     data_clinical = load_data_clinical()
-    data_RNASeq = load_data_RNASeq(proc=True)
+    data_RNASeq = load_data_RNASeq(label=False)
     # find the RNASeq dataframe index
     index_RNASeq = data_RNASeq.index.tolist()
     index_RNASeq = [x[:12].lower() for x in index_RNASeq]
@@ -129,11 +138,11 @@ def label_RNASeq_data(lymph=False):
             data_RNASeq_copy.loc[index_RNASeq, 'label'] = label
     
     # save the processed data for further analysis
-    save_processed_data(data_clinical_copy, data_type='clinical')
+    save_processed_data(data_clinical_copy, False, data_type='clinical')
     if not lymph:
-        save_processed_data(data_RNASeq_copy, data_type='RNASeq_label')
+        save_processed_data(data_RNASeq_copy, False, data_type='raw_counts')
     else:
-        save_processed_data(data_RNASeq_copy, data_type='RNASeq_lymph')
+        save_processed_data(data_RNASeq_copy, False, data_type='RNASeq_lymph')
 
 
 '''

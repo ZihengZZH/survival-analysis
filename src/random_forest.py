@@ -17,7 +17,7 @@ from src.utility import load_data_clinical
 from src.utility import load_data_RNASeq
 
 
-NO_TREES = 500
+NO_TREES = 100
 MAX_FEATURES = 0.1
 CRITERION = 'entropy'
 NO_JOBS = cpu_count() * 3
@@ -99,7 +99,8 @@ def show_important_feature(forest, data, save=True, img=False):
 def run_random_forest(load=False, model_no=1):
     # para load: whether or not to load pre-trained model
     # para model_no: if load, which model to load
-    data_RNASeq_labels = load_data_RNASeq()
+    data_RNASeq_labels = load_data_RNASeq(proc=False, label=False, raw_count=True)
+    print(data_RNASeq_labels.iloc[1:3])
     data_RNASeq_labels = data_RNASeq_labels.drop(columns=['gene'])
 
     data_labels = data_RNASeq_labels['label']
@@ -151,7 +152,8 @@ def draw_precision_recall_curve(y_test, y_score):
 '''ONLY EXECUTE ONCE'''
 def tune_hyperparameters():
     # load the data
-    data_RNASeq_labels = load_data_RNASeq()
+    data_RNASeq_labels = load_data_RNASeq(proc=False, label=False, raw_count=True)
+    print(data_RNASeq_labels.iloc[1:3])
     data_RNASeq_labels = data_RNASeq_labels.drop(columns=['gene'])
 
     data_labels = data_RNASeq_labels['label']
@@ -168,7 +170,7 @@ def tune_hyperparameters():
     }
 
     print("\nrunning the Grid Search for Random Forest classifier ...")
-    clf = GridSearchCV(RandomForestClassifier(), parameters, cv=3, n_jobs=NO_JOBS, verbose=10)
+    clf = GridSearchCV(RandomForestClassifier(), parameters, cv=2, n_jobs=NO_JOBS, verbose=10)
 
     clf.fit(X_train, y_train)
     print(clf.score(X_train, y_train))
