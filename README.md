@@ -17,9 +17,9 @@ In this project, we mainly use the [TCGA-BRCA](https://portal.gdc.cancer.gov/pro
 
 ## Table of Contents
 1. [TCGA-BRCA](#TCGA-BRCA)
-2. [Highlights in Olson2018](#Highlights\ in\ Olson2018)
-3. [Survival Analysis](#Survival\ Analysis)
-4. [Comparison of classifiers' performance](#Comparison\ of\ classifiers'\ performance)
+2. [Highlights in Olson2018](#Highlights%20in%20Olson2018)
+3. [Survival Analysis](#Survival%20Analysis)
+4. [Comparison of classifiers' performance](#Comparison%20of%20classifiers'%20performance)
 
 
 
@@ -120,15 +120,15 @@ A common mistake data analysts make a choosing to ignore the right-censored indi
 
 | RNASeq | Random Forest (RFs) | Gradient Tree Boosting (GBDT) | XGBoost |
 | --- | --- | --- | --- |
-| raw count | <img src="https://github.com/ZihengZZH/survival-analysis/tree/master/results/curve_random_forest.png" width=150> | <img src="https://github.com/ZihengZZH/survival-analysis/tree/master/results/curve_gradient_boost.png" width=150> | <img src="https://github.com/ZihengZZH/survival-analysis/tree/master/results/curve_xgboost.png" width=150> |
-| RPKM | <img src="https://github.com/ZihengZZH/survival-analysis/tree/master/results_RPKM/curve_random_forest.png" width=150> | <img src="https://github.com/ZihengZZH/survival-analysis/tree/master/results_RPKM/curve_gradient_boost.png" width=150> | <img src="https://github.com/ZihengZZH/survival-analysis/tree/master/results_RPKM/curve_xgboost.png" width=150> |
+| raw count | <img src="https://github.com/ZihengZZH/survival-analysis/blob/master/results/curve_random_forest.png" width=150> | <img src="https://github.com/ZihengZZH/survival-analysis/blob/master/results/curve_gradient_boost.png" width=150> | <img src="https://github.com/ZihengZZH/survival-analysis/blob/master/results/curve_xgboost.png" width=150> |
+| RPKM | <img src="https://github.com/ZihengZZH/survival-analysis/blob/master/results_RPKM/curve_random_forest.png" width=150> | <img src="https://github.com/ZihengZZH/survival-analysis/blob/master/results_RPKM/curve_gradient_boost.png" width=150> | <img src="https://github.com/ZihengZZH/survival-analysis/blob/master/results_RPKM/curve_xgboost.png" width=150> |
 
 
 **comparison of their performance using survival analysis**
 
-![](https://github.com/ZihengZZH/survival-analysis/tree/master/results/p_values.png)
+![](https://github.com/ZihengZZH/survival-analysis/blob/master/results/p_values.png)
 *p-values of every gene signature, using RNA raw count as features and tested on KM Estimate*
-![](https://github.com/ZihengZZH/survival-analysis/tree/master/results_RPKM/p_values.png)
+![](https://github.com/ZihengZZH/survival-analysis/blob/master/results_RPKM/p_values.png)
 *p-values of every gene signature, using RNA RPKM as features and tested on KM Estimate*
 
 
