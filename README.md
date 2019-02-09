@@ -15,6 +15,13 @@ In this project, we mainly use the [TCGA-BRCA](https://portal.gdc.cancer.gov/pro
 * Squamous Cell Neoplasms
 
 
+## Table of Contents
+1. [TCGA-BRCA](#TCGA-BRCA)
+2. [Highlights in Olson2018](#Highlights\ in\ Olson2018)
+3. [Survival Analysis](#Survival\ Analysis)
+4. [Comparison of classifiers' performance](#Comparison\ of\ classifiers'\ performance)
+
+
 
 ## TCGA-BRCA
 ---
@@ -55,7 +62,10 @@ This metric attempts to normalize for sequencing depth and gene length. Read cou
 2. divide the read counts by the 'per million' scaling factor, which normalizes for sequencing depth, giving you reads per million (RPM)
 3. divide the RPM values by the length of the gene, in kilobases, which gives you RPKM
 
-In this case, RPKM = {raw_counts / [sum(raw_counts) / 1000000]} / median_length_nomalized
+In this case, 
+RPKM = {raw_counts / [sum(raw_counts) / 1000000]} / median_length_nomalized
+
+$RPKM = \frac{raw\_counts \times 1000000}{median\_length\_nomalized \times \sum_{} raw\_counts}$
 
 In the project, only RPKM data are retained. 
 
@@ -65,7 +75,7 @@ After labeling RNA sequencing data with vital_status in clincal data, the shape 
 
 
 
-## Highlights in [Olson2018](https://psb.stanford.edu/psb-online/proceedings/psb18/olson.pdf) arXiv paper
+## Highlights in [Olson2018](https://psb.stanford.edu/psb-online/proceedings/psb18/olson.pdf)
 ---
 This paper, 'Data-driven advice for applying machine learning to bioinformatics problems', analyses 13 state-of-the-art commonly-used machine learning algorithms on a set of 165 classification problems. The 13 ML algorithms come from the sklearn implementations with individual hyperparameters, and the 165 classification problem datasets come from the Penn Machine Learning Benchmark ([PMLB](https://github.com/EpistasisLab/penn-ml-benchmarks)). 
 
@@ -104,9 +114,29 @@ At the time you want to make inferences about durations, it is possible that not
 
 A common mistake data analysts make a choosing to ignore the right-censored individuals. Survival analysis was originally developed to solve this type of problem, to deal with estimation when our data is right-censored. Even in the case where all events have been observed, i.e. no censorship, survival analysis is still a very useful tool to understand durations.
 
-## Performance comparison
+## Comparison of classifiers' performance 
+
+**classification accuracies**
+
+| RNASeq | Random Forest (RFs) | Gradient Tree Boosting (GBDT) | XGBoost |
+| --- | --- | --- | --- |
+| raw count | <img src="https://github.com/ZihengZZH/survival-analysis/tree/master/results/curve_random_forest.png" width=150> | <img src="https://github.com/ZihengZZH/survival-analysis/tree/master/results/curve_gradient_boost.png" width=150> | <img src="https://github.com/ZihengZZH/survival-analysis/tree/master/results/curve_xgboost.png" width=150> |
+| RPKM | <img src="https://github.com/ZihengZZH/survival-analysis/tree/master/results_RPKM/curve_random_forest.png" width=150> | <img src="https://github.com/ZihengZZH/survival-analysis/tree/master/results_RPKM/curve_gradient_boost.png" width=150> | <img src="https://github.com/ZihengZZH/survival-analysis/tree/master/results_RPKM/curve_xgboost.png" width=150> |
+
+
+**comparison of their performance using survival analysis**
+
+![](https://github.com/ZihengZZH/survival-analysis/tree/master/results/p_values.png)
+*p-values of every gene signature, using RNA raw count as features and tested on KM Estimate*
+![](https://github.com/ZihengZZH/survival-analysis/tree/master/results_RPKM/p_values.png)
+*p-values of every gene signature, using RNA RPKM as features and tested on KM Estimate*
+
+
+
+**Statistics of p-values in above figures**
 
 | the number of p-values < 0.01 | Random Forests | Gradient Tree Boosting | XGBoost |
 | -- | -- | -- | -- |
 | raw counts | 6 | 8 | 7 |
 | RPKM | 2 | 12 | 9 |
+
